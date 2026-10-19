@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Tv, Smartphone, Sparkles, Play } from 'lucide-react';
+import { Tv, Smartphone, Sparkles, Trophy } from 'lucide-react';
 import { usePartyStore } from '../store/usePartyStore';
 import { GameId } from '../types/game';
 
@@ -22,138 +22,208 @@ export default function LandingPage() {
   };
 
   const games = [
-    { id: 'TABOO' as GameId, emoji: '🤫', name: 'قول بس\nلا تقول', color: 'from-emerald-900/60 to-emerald-800/30 border-emerald-500/40 hover:border-emerald-400 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)]' },
-    { id: 'WAVELENGTH' as GameId, emoji: '📡', name: 'الطول\nالموجي', color: 'from-cyan-900/60 to-cyan-800/30 border-cyan-500/40 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)]' },
-    { id: 'FAMILY_FEUD' as GameId, emoji: '🎤', name: 'ستيف\nهارفي', color: 'from-amber-900/60 to-amber-800/30 border-amber-500/40 hover:border-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.3)]' },
-    { id: 'SPYFALL' as GameId, emoji: '🕵️', name: 'برّا\nالسالفة', color: 'from-red-900/60 to-red-800/30 border-red-500/40 hover:border-red-400 hover:shadow-[0_0_20px_rgba(239,68,68,0.3)]' },
+    {
+      id: 'TABOO' as GameId,
+      image: '/assets/games/taboo.png',
+      fallbackEmoji: '🤫',
+      name: 'قول بس لا تقول',
+      badge: 'تخمين وسرعة',
+      tagColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+    },
+    {
+      id: 'WAVELENGTH' as GameId,
+      image: '/assets/games/wavelength.png',
+      fallbackEmoji: '📡',
+      name: 'الطول الموجي',
+      badge: 'تخاطر ومؤشر',
+      tagColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+    },
+    {
+      id: 'FAMILY_FEUD' as GameId,
+      image: '/assets/games/familyfeud.png',
+      fallbackEmoji: '🎤',
+      name: 'ستيف هارفي',
+      badge: 'أجراس وتنافس',
+      tagColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+    },
+    {
+      id: 'SPYFALL' as GameId,
+      image: '/assets/games/spyfall.svg',
+      fallbackEmoji: '🕵️',
+      name: 'برّا السالفة',
+      badge: 'غموض وتحقيق',
+      tagColor: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+    },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 relative overflow-hidden select-none">
+    <div className="min-h-screen playful-bg flex flex-col items-center justify-between p-4 md:p-8 relative overflow-hidden select-none">
+      {/* Decorative Pastel Background Blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-violet-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute -top-20 -left-20 w-[420px] h-[420px] bg-purple-600/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-1/3 -right-20 w-[380px] h-[380px] bg-rose-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1.2s' }} />
+        <div className="absolute -bottom-20 left-1/3 w-[400px] h-[400px] bg-cyan-500/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2.4s' }} />
       </div>
 
+      {/* ─── LOGO & BRAND HEADER ─────────────────────────────────────────── */}
       <motion.div
-        initial={{ opacity: 0, y: -30 }}
+        initial={{ opacity: 0, y: -25 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="text-center mb-10 relative z-10"
+        transition={{ duration: 0.5 }}
+        className="text-center pt-4 md:pt-8 relative z-10"
       >
-        <div className="text-8xl mb-3">🎉</div>
-        <h1 className="text-6xl font-black text-white mb-2" style={{ fontFamily: 'Cairo, sans-serif' }}>
-          <span className="text-emerald-400">Party</span>Hub
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold text-slate-200 mb-3 shadow-lg" style={{ fontFamily: 'Cairo, sans-serif' }}>
+          <Sparkles className="w-4 h-4 text-amber-400" />
+          <span>منصة ألعاب السهرة والمجلس التفاعلية</span>
+        </div>
+
+        <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight flex items-center justify-center gap-3" style={{ fontFamily: 'Cairo, sans-serif' }}>
+          <span className="bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 bg-clip-text text-transparent">Party</span>
+          <span>Hub</span>
+          <span className="text-4xl md:text-6xl animate-bounce">🎉</span>
         </h1>
-        <p className="text-slate-400 text-xl" style={{ fontFamily: 'Cairo, sans-serif' }}>
-          العاب السهرة والمجلس العربي
+        <p className="text-slate-300 text-sm md:text-base mt-2 font-medium" style={{ fontFamily: 'Cairo, sans-serif' }}>
+          العاب جماعية باللغة العربية لشاشات التلفزيون وهواتف اللاعبين
         </p>
       </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl relative z-10">
-        {/* Host button */}
-        <motion.button
+      {/* ─── MAIN CALL-TO-ACTION CARDS (PLAYFUL CASUAL STYLE) ─────────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl my-6 relative z-10">
+        {/* Host Main Screen Button */}
+        <motion.div
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={handleHostClick}
-          disabled={!isConnected}
-          className="game-card bg-gradient-to-br from-emerald-900/80 to-emerald-800/40 border-2 border-emerald-500/50 rounded-3xl p-8 text-right group hover:border-emerald-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          className="playful-card p-6 md:p-8 text-right cursor-pointer flex flex-col justify-between border-2 border-emerald-500/30 hover:border-emerald-400/80 transition-all group"
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-16 h-16 bg-emerald-500/20 rounded-2xl flex items-center justify-center">
-              <Tv className="w-8 h-8 text-emerald-400" />
+          <div>
+            <div className="flex items-center justify-between mb-5">
+              <span className="text-5xl group-hover:scale-110 transition-transform">📺</span>
+              <div className="w-14 h-14 bg-gradient-to-br from-emerald-500/30 to-teal-500/10 rounded-2xl flex items-center justify-center border border-emerald-500/40 shadow-inner">
+                <Tv className="w-7 h-7 text-emerald-400" />
+              </div>
             </div>
-            <span className="text-4xl">📺</span>
-          </div>
-          <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'Cairo, sans-serif' }}>
-            شاشة العرض الرئيسية
-          </h2>
-          <p className="text-emerald-300/70 text-sm" style={{ fontFamily: 'Cairo, sans-serif' }}>
-            تلفزيون / لابتوب
-          </p>
-          <p className="text-slate-400 text-xs mt-2" style={{ fontFamily: 'Cairo, sans-serif' }}>
-            أنشئ غرفة وشارك كود QR مع اللاعبين
-          </p>
-        </motion.button>
 
-        {/* Play button */}
-        <motion.button
+            <h2 className="text-2xl md:text-3xl font-black text-white mb-2" style={{ fontFamily: 'Cairo, sans-serif' }}>
+              شاشة العرض الرئيسية
+            </h2>
+            <p className="text-emerald-300 text-sm font-bold" style={{ fontFamily: 'Cairo, sans-serif' }}>
+              للتلفزيون أو اللابتوب (الهوست)
+            </p>
+            <p className="text-slate-400 text-xs mt-2 leading-relaxed" style={{ fontFamily: 'Cairo, sans-serif' }}>
+              تفتح اللعبة على الشاشة الكبيرة وتعرض العدادات وباركود الدخول للمجلس.
+            </p>
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-white/10">
+            <button
+              disabled={!isConnected}
+              className="w-full py-3.5 btn-playful-mint text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              style={{ fontFamily: 'Cairo, sans-serif' }}
+            >
+              <span>إنشاء غرفة جديدة الآن</span>
+              <span className="text-lg">🚀</span>
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Player Join Button */}
+        <motion.div
           initial={{ opacity: 0, x: 30 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
+          transition={{ duration: 0.5, delay: 0.25 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => navigate('/play')}
-          className="game-card bg-gradient-to-br from-violet-900/80 to-violet-800/40 border-2 border-violet-500/50 rounded-3xl p-8 text-right group hover:border-violet-400 transition-all cursor-pointer"
+          className="playful-card p-6 md:p-8 text-right cursor-pointer flex flex-col justify-between border-2 border-violet-500/30 hover:border-violet-400/80 transition-all group"
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-16 h-16 bg-violet-500/20 rounded-2xl flex items-center justify-center">
-              <Smartphone className="w-8 h-8 text-violet-400" />
+          <div>
+            <div className="flex items-center justify-between mb-5">
+              <span className="text-5xl group-hover:scale-110 transition-transform">📱</span>
+              <div className="w-14 h-14 bg-gradient-to-br from-violet-500/30 to-purple-500/10 rounded-2xl flex items-center justify-center border border-violet-500/40 shadow-inner">
+                <Smartphone className="w-7 h-7 text-violet-400" />
+              </div>
             </div>
-            <span className="text-4xl">📱</span>
+
+            <h2 className="text-2xl md:text-3xl font-black text-white mb-2" style={{ fontFamily: 'Cairo, sans-serif' }}>
+              انضم كلاعب من جوالك
+            </h2>
+            <p className="text-violet-300 text-sm font-bold" style={{ fontFamily: 'Cairo, sans-serif' }}>
+              تحكّم وتفاعل مباشر
+            </p>
+            <p className="text-slate-400 text-xs mt-2 leading-relaxed" style={{ fontFamily: 'Cairo, sans-serif' }}>
+              ادخل كود الغرفة الموضح على التلفزيون أو امسح الباركود وانضم لفريقك فوراً.
+            </p>
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'Cairo, sans-serif' }}>
-            انضم كلاعب
-          </h2>
-          <p className="text-violet-300/70 text-sm" style={{ fontFamily: 'Cairo, sans-serif' }}>
-            بجوالك
-          </p>
-          <p className="text-slate-400 text-xs mt-2" style={{ fontFamily: 'Cairo, sans-serif' }}>
-            امسح QR Code أو أدخل رمز الغرفة
-          </p>
-        </motion.button>
+
+          <div className="mt-6 pt-4 border-t border-white/10">
+            <button
+              className="w-full py-3.5 btn-playful-purple text-sm flex items-center justify-center gap-2 cursor-pointer"
+              style={{ fontFamily: 'Cairo, sans-serif' }}
+            >
+              <span>دخول الغرفة واللعب</span>
+              <span className="text-lg">🎮</span>
+            </button>
+          </div>
+        </motion.div>
       </div>
 
-      {/* Connection Indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.8 }}
-        className="mt-6 flex items-center gap-2 relative z-10"
-      >
-        <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`} />
-        <span className="text-slate-500 text-xs" style={{ fontFamily: 'Cairo, sans-serif' }}>
-          {isConnected ? 'متصل بالخادم وجاهز' : 'جاري الاتصال...'}
-        </span>
-      </motion.div>
-
-      {/* Direct Game Launch Buttons at bottom */}
+      {/* ─── GAMES SHOWCASE WITH ILLUSTRATED COVERS ───────────────────────── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="mt-8 w-full max-w-2xl relative z-10"
+        transition={{ delay: 0.4 }}
+        className="w-full max-w-4xl relative z-10 pb-4"
       >
-        <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400 mb-3" style={{ fontFamily: 'Cairo, sans-serif' }}>
-          <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-          <span>أو اضغط على أي لعبة للبدء مباشرة على شاشة العرض:</span>
+        <div className="flex items-center justify-center gap-2 text-xs font-bold text-slate-400 mb-3" style={{ fontFamily: 'Cairo, sans-serif' }}>
+          <Trophy className="w-4 h-4 text-amber-400" />
+          <span>اختر أي لعبة لتبدأ السهرة مباشرة على الشاشة الكبيرة:</span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {games.map((game, i) => (
             <motion.button
               key={game.id}
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05, y: -4 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => handleGameClick(game.id)}
-              disabled={!isConnected}
-              className={`bg-gradient-to-br ${game.color} border-2 rounded-2xl p-4 text-center cursor-pointer transition-all disabled:opacity-50 group shadow-md`}
+              className="playful-card p-3 text-right hover:border-white/40 transition-all flex flex-col justify-between overflow-hidden cursor-pointer group shadow-xl"
             >
-              <div className="text-3xl mb-1.5 group-hover:scale-110 transition-transform">{game.emoji}</div>
-              <div className="text-xs text-white font-bold whitespace-pre-line mb-1" style={{ fontFamily: 'Cairo, sans-serif' }}>
-                {game.name}
+              {/* Illustrated Cover Art */}
+              <div className="relative w-full aspect-square rounded-2xl overflow-hidden mb-2.5 bg-slate-900 border border-white/10 flex items-center justify-center">
+                <img
+                  src={game.image}
+                  alt={game.name}
+                  className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-300"
+                  onError={(e) => {
+                    // Fallback to emoji if image not yet loaded
+                    const target = e.target as HTMLElement;
+                    target.style.display = 'none';
+                  }}
+                />
               </div>
-              <span className="text-[10px] text-emerald-400 opacity-80 group-hover:opacity-100 flex items-center justify-center gap-0.5" style={{ fontFamily: 'Cairo, sans-serif' }}>
-                <Play className="w-2.5 h-2.5 fill-emerald-400" />
-                <span>ابدأ الآن</span>
-              </span>
+
+              <div>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border inline-block mb-1 ${game.tagColor}`} style={{ fontFamily: 'Cairo, sans-serif' }}>
+                  {game.badge}
+                </span>
+                <h3 className="text-sm font-black text-white" style={{ fontFamily: 'Cairo, sans-serif' }}>
+                  {game.name}
+                </h3>
+              </div>
             </motion.button>
           ))}
         </div>
       </motion.div>
+
+      {/* ─── STATUS FOOTER ────────────────────────────────────────────────── */}
+      <div className="flex items-center gap-2 relative z-10 text-[11px] text-slate-500 pt-2" style={{ fontFamily: 'Cairo, sans-serif' }}>
+        <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`} />
+        <span>{isConnected ? 'الخادم متصل وجاهز للاستخدام' : 'جاري الاتصال...'}</span>
+      </div>
     </div>
   );
 }

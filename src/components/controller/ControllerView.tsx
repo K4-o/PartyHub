@@ -33,27 +33,29 @@ export default function ControllerView() {
   // ─── GAME OVER VIEW ───────────────────────────────────────────────────────
   if (room.phase === 'GAME_OVER') {
     return (
-      <div className="h-dvh bg-slate-950 flex flex-col justify-between p-6 select-none text-center">
-        <div className="my-auto space-y-4">
-          <Trophy className="w-20 h-20 text-amber-400 mx-auto animate-bounce" />
+      <div className="h-dvh playful-bg flex flex-col justify-between p-6 select-none text-center">
+        <div className="my-auto space-y-5 max-w-sm mx-auto w-full playful-card p-8 shadow-2xl">
+          <span className="text-7xl block animate-bounce">🏆</span>
           <h2 className="text-3xl font-black text-white" style={{ fontFamily: 'Cairo, sans-serif' }}>
             نهاية اللعبة! 🎉
           </h2>
-          <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-            <span className="text-xs text-slate-400 block mb-1">النتيجة النهائية:</span>
-            <div className="flex justify-around text-lg font-black mt-2" style={{ fontFamily: 'Cairo, sans-serif' }}>
-              <span className="text-emerald-400">🦅 {room.teams.A.name}: {room.teams.A.score}</span>
-              <span className="text-violet-400">🐺 {room.teams.B.name}: {room.teams.B.score}</span>
+          <div className="bg-white/10 border border-white/15 p-4 rounded-3xl shadow-sm">
+            <span className="text-xs text-white/70 block mb-2 font-bold" style={{ fontFamily: 'Cairo, sans-serif' }}>
+              النتيجة النهائية:
+            </span>
+            <div className="flex justify-around text-lg font-black" style={{ fontFamily: 'Cairo, sans-serif' }}>
+              <span className="text-emerald-300">🦅 {room.teams.A.name}: {room.teams.A.score}</span>
+              <span className="text-purple-300">🐺 {room.teams.B.name}: {room.teams.B.score}</span>
             </div>
           </div>
-          <p className="text-slate-400 text-xs" style={{ fontFamily: 'Cairo, sans-serif' }}>
-            المضيف سيقوم بالعودة للوبي أو اختيار لعبة جديدة
+          <p className="text-white/60 text-xs font-bold" style={{ fontFamily: 'Cairo, sans-serif' }}>
+            المضيف سيقوم باختيار لعبة ثانية للرجوع للوبي 🎮
           </p>
         </div>
 
         <div className="text-center pb-2">
-          <span className="text-xs text-slate-600" style={{ fontFamily: 'Cairo, sans-serif' }}>
-            PartyHub — العاب السهرة
+          <span className="text-xs text-white/40 font-bold" style={{ fontFamily: 'Cairo, sans-serif' }}>
+            PartyHub — ألعاب السهرة والمجلس
           </span>
         </div>
       </div>

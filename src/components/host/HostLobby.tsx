@@ -23,35 +23,43 @@ interface Props {
 const GAMES = [
   {
     id: 'TABOO' as GameId,
-    emoji: '🤫',
+    image: '/assets/games/taboo.png',
+    fallbackEmoji: '🤫',
     name: 'قول بس لا تقول',
     desc: 'فريق يوصف وفريق يخمن بدون نطق الكلمات الممنوعة الخمسة!',
     badge: 'حماس وسرعة بديهة',
-    color: 'from-emerald-950 via-emerald-900/80 to-slate-900 border-emerald-500/50 hover:border-emerald-400',
+    color: 'from-emerald-950 via-slate-900 to-emerald-950/60 border-emerald-500/40 hover:border-emerald-400',
+    tagColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
   },
   {
     id: 'WAVELENGTH' as GameId,
-    emoji: '📡',
+    image: '/assets/games/wavelength.png',
+    fallbackEmoji: '📡',
     name: 'الطول الموجي',
     desc: 'البيشيك يعطي تلميح والفريق يحرّك المؤشر على النطاق الصح!',
     badge: 'تخاطر وتفكير مشترك',
-    color: 'from-cyan-950 via-cyan-900/80 to-slate-900 border-cyan-500/50 hover:border-cyan-400',
+    color: 'from-cyan-950 via-slate-900 to-cyan-950/60 border-cyan-500/40 hover:border-cyan-400',
+    tagColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
   },
   {
     id: 'FAMILY_FEUD' as GameId,
-    emoji: '🎤',
+    image: '/assets/games/familyfeud.png',
+    fallbackEmoji: '🎤',
     name: 'ستيف هارفي',
     desc: 'حرب العائلات! استطلاع رأي 100 شخص - وش أكثر إجابة قالوها؟',
     badge: 'أجراس وتنافس عائلي',
-    color: 'from-amber-950 via-amber-900/80 to-slate-900 border-amber-500/50 hover:border-amber-400',
+    color: 'from-amber-950 via-slate-900 to-amber-950/60 border-amber-500/40 hover:border-amber-400',
+    tagColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
   },
   {
     id: 'SPYFALL' as GameId,
-    emoji: '🕵️',
+    image: '/assets/games/spyfall.svg',
+    fallbackEmoji: '🕵️',
     name: 'برّا السالفة',
     desc: 'في جاسوس بينكم ما يدري وين المكان! اكتشفوه قبل ما يكشفكم!',
     badge: 'ذكاء وخداع اجتماعي',
-    color: 'from-red-950 via-red-900/80 to-slate-900 border-red-500/50 hover:border-red-400',
+    color: 'from-indigo-950 via-slate-900 to-rose-950/60 border-rose-500/40 hover:border-rose-400',
+    tagColor: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
   },
 ];
 
@@ -83,7 +91,7 @@ export default function HostLobby({ room }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 p-4 md:p-6 overflow-y-auto">
+    <div className="min-h-screen playful-bg p-4 md:p-6 overflow-y-auto">
       <div className="max-w-7xl mx-auto">
         {/* ─── HEADER ──────────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between mb-6">
@@ -390,7 +398,7 @@ export default function HostLobby({ room }: Props) {
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {GAMES.map((game, i) => (
                 <motion.button
                   key={game.id}
@@ -400,30 +408,50 @@ export default function HostLobby({ room }: Props) {
                   whileHover={{ scale: 1.02, translateY: -4 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleGameSelect(game.id)}
-                  className={`bg-gradient-to-br ${game.color} border-2 rounded-3xl p-6 text-right transition-all text-white group cursor-pointer shadow-xl relative overflow-hidden`}
+                  className="playful-card p-5 text-right transition-all text-white group cursor-pointer shadow-2xl relative overflow-hidden flex flex-col justify-between hover:border-white/40"
                 >
-                  <div className="flex items-start justify-between mb-3">
-                    <span className="text-5xl group-hover:scale-110 transition-transform">
-                      {game.emoji}
-                    </span>
-                    <span
-                      className="px-2.5 py-1 bg-white/10 rounded-full text-[10px] font-bold text-slate-300 border border-white/10"
-                      style={{ fontFamily: 'Cairo, sans-serif' }}
-                    >
-                      {game.badge}
-                    </span>
+                  {/* Top section: Illustrated thumbnail + Badge */}
+                  <div className="flex items-start gap-4 mb-3">
+                    <div className="w-20 h-20 rounded-2xl overflow-hidden bg-slate-900 border border-white/10 shrink-0 shadow-md">
+                      <img
+                        src={game.image}
+                        alt={game.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        onError={(e) => {
+                          const target = e.target as HTMLElement;
+                          target.style.display = 'none';
+                        }}
+                      />
+                    </div>
+
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${game.tagColor}`}
+                          style={{ fontFamily: 'Cairo, sans-serif' }}
+                        >
+                          {game.badge}
+                        </span>
+                        <span className="text-xl">{game.fallbackEmoji}</span>
+                      </div>
+
+                      <h3
+                        className="text-xl font-black text-white group-hover:text-emerald-300 transition-colors"
+                        style={{ fontFamily: 'Cairo, sans-serif' }}
+                      >
+                        {game.name}
+                      </h3>
+                    </div>
                   </div>
 
-                  <h3 className="text-2xl font-black mb-2 group-hover:text-emerald-300 transition-colors" style={{ fontFamily: 'Cairo, sans-serif' }}>
-                    {game.name}
-                  </h3>
-                  <p className="text-slate-300 text-xs leading-relaxed" style={{ fontFamily: 'Cairo, sans-serif' }}>
+                  <p className="text-slate-300 text-xs leading-relaxed mb-3" style={{ fontFamily: 'Cairo, sans-serif' }}>
                     {game.desc}
                   </p>
 
-                  <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
-                    <span className="text-xs text-emerald-400 font-bold group-hover:underline" style={{ fontFamily: 'Cairo, sans-serif' }}>
-                      اضغط للبدء والقواعد ←
+                  <div className="pt-3 border-t border-white/10 flex items-center justify-between">
+                    <span className="text-xs text-emerald-400 font-bold group-hover:underline flex items-center gap-1" style={{ fontFamily: 'Cairo, sans-serif' }}>
+                      <span>بدء اللعبة والشرح</span>
+                      <span>←</span>
                     </span>
                     <Sparkles className="w-4 h-4 text-emerald-400 opacity-60 group-hover:opacity-100" />
                   </div>

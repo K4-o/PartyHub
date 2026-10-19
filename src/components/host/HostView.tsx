@@ -131,7 +131,7 @@ export default function HostView() {
   const selectedGameInfo = room.selectedGame ? GAME_NAMES[room.selectedGame] : null;
 
   return (
-    <div className={`min-h-screen bg-slate-950 flex flex-col relative select-none ${showViolationFlash ? 'animate-flash-red' : ''}`}>
+    <div className={`min-h-screen playful-bg flex flex-col relative select-none ${showViolationFlash ? 'animate-flash-red' : ''}`}>
       {/* ─── STRIKE OVERLAY (FAMILY FEUD) ─────────────────────────────────── */}
       <AnimatePresence>
         {showStrikeOverlay > 0 && (
@@ -347,19 +347,19 @@ export default function HostView() {
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="bg-slate-900/90 border border-slate-800 max-w-2xl w-full rounded-3xl p-8 text-center"
+              className="playful-card max-w-2xl w-full p-8 text-center shadow-2xl"
             >
-              <div className="text-7xl mb-4">{selectedGameInfo.emoji}</div>
+              <div className="text-7xl mb-4 animate-bounce">{selectedGameInfo.emoji}</div>
               <h2 className="text-4xl font-black text-white mb-2" style={{ fontFamily: 'Cairo, sans-serif' }}>
                 {selectedGameInfo.title}
               </h2>
-              <div className="my-6 space-y-3 text-right bg-slate-950/60 p-6 rounded-2xl border border-slate-800/80">
-                <h4 className="text-emerald-400 font-bold mb-3 text-sm" style={{ fontFamily: 'Cairo, sans-serif' }}>
+              <div className="my-6 space-y-3 text-right bg-white/10 p-6 rounded-3xl border border-white/10 shadow-inner">
+                <h4 className="text-amber-300 font-black mb-3 text-sm" style={{ fontFamily: 'Cairo, sans-serif' }}>
                   قواعد اللعبة:
                 </h4>
                 {selectedGameInfo.rules.map((rule, idx) => (
-                  <div key={idx} className="flex items-start gap-3 text-slate-300 text-sm">
-                    <span className="text-emerald-400 font-bold">#{idx + 1}</span>
+                  <div key={idx} className="flex items-start gap-3 text-white text-sm font-medium">
+                    <span className="text-amber-300 font-black">#{idx + 1}</span>
                     <span style={{ fontFamily: 'Cairo, sans-serif' }}>{rule}</span>
                   </div>
                 ))}
@@ -368,17 +368,17 @@ export default function HostView() {
               <div className="flex gap-4 justify-center mt-8">
                 <button
                   onClick={() => emit('host:switch_game', { roomCode: room.code })}
-                  className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl transition-colors"
+                  className="btn-playful-slate px-6 py-3 text-sm cursor-pointer"
                   style={{ fontFamily: 'Cairo, sans-serif' }}
                 >
                   رجوع
                 </button>
                 <button
                   onClick={() => emit('host:start_game', { roomCode: room.code })}
-                  className="px-8 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl transition-colors flex items-center gap-2 glow-emerald"
+                  className="btn-playful-peach px-8 py-3 text-base flex items-center gap-2 cursor-pointer"
                   style={{ fontFamily: 'Cairo, sans-serif' }}
                 >
-                  <Play className="w-5 h-5 fill-slate-950" />
+                  <Play className="w-5 h-5 fill-white" />
                   <span>بدء اللعبة الآن!</span>
                 </button>
               </div>
@@ -400,11 +400,11 @@ export default function HostView() {
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="bg-slate-900/90 border border-slate-800 max-w-xl w-full rounded-3xl p-8 text-center shadow-2xl"
+              className="playful-card max-w-xl w-full p-8 text-center shadow-2xl"
             >
-              <div className="text-8xl mb-4">🏆</div>
+              <div className="text-8xl mb-4 animate-bounce">🏆</div>
               <h2 className="text-4xl font-black text-white mb-2" style={{ fontFamily: 'Cairo, sans-serif' }}>
-                نهاية اللعبة!
+                نهاية اللعبة! 🎉
               </h2>
               <div className="my-6">
                 <ScoreBanner teams={room.teams} />
@@ -414,10 +414,10 @@ export default function HostView() {
                   clearGameOver();
                   emit('host:reset_to_lobby', { roomCode: room.code });
                 }}
-                className="mt-6 px-8 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl transition-colors glow-emerald"
+                className="btn-playful-mint mt-4 px-8 py-4 text-base cursor-pointer"
                 style={{ fontFamily: 'Cairo, sans-serif' }}
               >
-                العودة للوبي واختيار لعبة ثانية
+                العودة للوبي واختيار لعبة ثانية 🎮
               </button>
             </motion.div>
           </div>
