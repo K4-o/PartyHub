@@ -94,6 +94,24 @@ export const usePartyStore = create<PartyStore>((set, get) => ({
       set({ room, roomCode: room.code, lanIp: room.lanIp });
     });
 
+    // Wavelength real-time dial sync
+    socket.on('wavelength:dial_moved', ({ value }: { value: number }) => {
+      set((state) => {
+        if (!state.room || !state.room.gameState || state.room.gameState.gameId !== 'WAVELENGTH') {
+          return {};
+        }
+        return {
+          room: {
+            ...state.room,
+            gameState: {
+              ...state.room.gameState,
+              teamDialValue: value,
+            },
+          },
+        };
+      });
+    });
+
     // Sound events
     socket.on('sound:correct', () => soundEngine.playCorrect());
     socket.on('sound:strike', () => soundEngine.playStrike());

@@ -26,12 +26,11 @@ const WAVELENGTH_CARDS: WavelengthCard[] = [
 ];
 
 const usedCards = new Map<string, Set<string>>();
-const stealTimers = new Map<string, NodeJS.Timeout>();
 const psychicIndices = new Map<string, { A: number; B: number }>();
 
 function getNextCard(roomCode: string): WavelengthCard {
   const used = usedCards.get(roomCode) || new Set();
-  const available = WAVELENGTH_CARDS.filter(c => !used.has(c.id));
+  const available = WAVELENGTH_CARDS.filter((c) => !used.has(c.id));
   const pool = available.length > 0 ? available : WAVELENGTH_CARDS;
   const card = pool[Math.floor(Math.random() * pool.length)];
   used.add(card.id);
@@ -78,9 +77,7 @@ function startRound(io: Server, roomCode: string, activeTeam: TeamId, roundNumbe
     clueText: '',
     targetCenter,
     teamDialValue: 50,
-    opponentPrediction: null,
-    stealTimeRemaining: 20,
-    lastRoundPoints: { activeTeamEarned: 0, opponentTeamEarned: 0 },
+    lastRoundPoints: { activeTeamEarned: 0 },
     roundNumber,
     maxRounds: 4,
   };
@@ -100,6 +97,7 @@ export function wavelengthSubmitClue(io: Server, roomCode: string, clueText: str
   state.teamDialValue = 50;
 
   io.to(roomCode).emit('room:state', room);
+  io.to(roomCode).emit('sound:flip');
 }
 
 export function wavelengthMoveDial(io: Server, roomCode: string, value: number): void {
@@ -109,8 +107,11 @@ export function wavelengthMoveDial(io: Server, roomCode: string, value: number):
   const state = room.gameState as WavelengthState;
   if (state.subPhase !== 'TEAM_GUESS') return;
 
-  state.teamDialValue = Math.max(0, Math.min(100, value));
+  state.teamDialValue = Math.max(0, Math.min(100, Math.round(value)));
+
+  // Broadcast immediate dial event for smooth needle rotation, and sync room state
   io.to(roomCode).emit('wavelength:dial_moved', { value: state.teamDialValue });
+  io.to(roomCode).emit('room:state', room);
 }
 
 export function wavelengthLockIn(io: Server, roomCode: string): void {
@@ -118,33 +119,9 @@ export function wavelengthLockIn(io: Server, roomCode: string): void {
   if (!room || !room.gameState || room.gameState.gameId !== 'WAVELENGTH') return;
 
   const state = room.gameState as WavelengthState;
-  state.subPhase = 'OPPONENT_STEAL';
-  state.stealTimeRemaining = 20;
+  if (state.subPhase !== 'TEAM_GUESS') return;
 
-  io.to(roomCode).emit('room:state', room);
-
-  // Auto-proceed after 20s if no prediction
-  const timer = setTimeout(() => {
-    revealWavelength(io, roomCode);
-  }, 20000);
-  stealTimers.set(roomCode, timer);
-}
-
-export function wavelengthOpponentPredict(
-  io: Server,
-  roomCode: string,
-  prediction: 'LEFT' | 'RIGHT'
-): void {
-  const room = getRoom(roomCode);
-  if (!room || !room.gameState || room.gameState.gameId !== 'WAVELENGTH') return;
-
-  const state = room.gameState as WavelengthState;
-  state.opponentPrediction = prediction;
-
-  const timer = stealTimers.get(roomCode);
-  if (timer) clearTimeout(timer);
-  stealTimers.delete(roomCode);
-
+  // Steal phase has been completely removed per request! Directly reveal results:
   revealWavelength(io, roomCode);
 }
 
@@ -153,8 +130,9 @@ export function revealWavelength(io: Server, roomCode: string): void {
   if (!room || !room.gameState || room.gameState.gameId !== 'WAVELENGTH') return;
 
   const state = room.gameState as WavelengthState;
+  if (state.subPhase === 'REVEAL') return; // Guard against duplicate calls
+
   const diff = Math.abs(state.targetCenter - state.teamDialValue);
-  const opposingTeam: TeamId = state.activeTeam === 'A' ? 'B' : 'A';
 
   let activePoints = 0;
   if (diff <= 3) activePoints = 4;
@@ -162,40 +140,45 @@ export function revealWavelength(io: Server, roomCode: string): void {
   else if (diff <= 15) activePoints = 2;
   else activePoints = 0;
 
-  let opponentPoints = 0;
-  if (diff > 3 && state.opponentPrediction) {
-    const correctPrediction =
-      (state.opponentPrediction === 'LEFT' && state.targetCenter < state.teamDialValue) ||
-      (state.opponentPrediction === 'RIGHT' && state.targetCenter > state.teamDialValue);
-    if (correctPrediction) opponentPoints = 1;
-  }
-
   room.teams[state.activeTeam].score += activePoints;
-  room.teams[opposingTeam].score += opponentPoints;
-
-  state.lastRoundPoints = { activeTeamEarned: activePoints, opponentTeamEarned: opponentPoints };
+  state.lastRoundPoints = { activeTeamEarned: activePoints };
   state.subPhase = 'REVEAL';
 
   io.to(roomCode).emit('room:state', room);
-  io.to(roomCode).emit('wavelength:revealed', { diff, activePoints, opponentPoints });
+  io.to(roomCode).emit('wavelength:revealed', { diff, activePoints });
 
-  // Check win
+  if (activePoints >= 3) {
+    io.to(roomCode).emit('sound:correct');
+  } else if (activePoints === 2) {
+    io.to(roomCode).emit('sound:flip');
+  } else {
+    io.to(roomCode).emit('sound:strike');
+  }
+
+  // NOTE: Auto-advance is strictly removed!
+  // The host must explicitly trigger wavelength:next_round.
+}
+
+export function wavelengthNextRound(io: Server, roomCode: string): void {
+  const room = getRoom(roomCode);
+  if (!room || !room.gameState || room.gameState.gameId !== 'WAVELENGTH') return;
+
+  const state = room.gameState as WavelengthState;
+  if (state.subPhase !== 'REVEAL') return;
+
+  // Check win condition
   if (
     room.teams.A.score >= room.settings.targetWinScore ||
-    room.teams.B.score >= room.settings.targetWinScore
+    room.teams.B.score >= room.settings.targetWinScore ||
+    state.roundNumber >= state.maxRounds * 2
   ) {
-    setTimeout(() => endGame(io, roomCode), 3000);
-  } else {
-    setTimeout(() => {
-      const nextTeam: TeamId = state.activeTeam === 'A' ? 'B' : 'A';
-      const nextRound = state.roundNumber + 1;
-      if (nextRound > state.maxRounds * 2) {
-        endGame(io, roomCode);
-      } else {
-        startRound(io, roomCode, nextTeam, nextRound);
-      }
-    }, 4000);
+    endGame(io, roomCode);
+    return;
   }
+
+  const nextTeam: TeamId = state.activeTeam === 'A' ? 'B' : 'A';
+  const nextRound = state.roundNumber + 1;
+  startRound(io, roomCode, nextTeam, nextRound);
 }
 
 function endGame(io: Server, roomCode: string): void {
@@ -211,9 +194,6 @@ function endGame(io: Server, roomCode: string): void {
 }
 
 export function cleanupWavelength(roomCode: string): void {
-  const timer = stealTimers.get(roomCode);
-  if (timer) clearTimeout(timer);
-  stealTimers.delete(roomCode);
   usedCards.delete(roomCode);
   psychicIndices.delete(roomCode);
 }

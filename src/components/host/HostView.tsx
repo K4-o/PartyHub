@@ -84,6 +84,7 @@ export default function HostView() {
   } = usePartyStore();
 
   const [activeTab, setActiveTab] = useState<'game' | 'players'>('game');
+  const [showPlayersDropdown, setShowPlayersDropdown] = useState(false);
 
   // Auto-create room if navigating directly to /host
   useEffect(() => {
@@ -185,19 +186,108 @@ export default function HostView() {
             <span className="hidden sm:inline">كود QR</span>
           </button>
 
-          {/* Connected players pill */}
-          <div className="flex items-center gap-1.5 bg-slate-800/80 border border-slate-700/60 rounded-xl px-3 py-1.5">
-            <Users className="w-4 h-4 text-slate-400" />
-            <span className="text-xs text-slate-300 font-bold" style={{ fontFamily: 'Cairo, sans-serif' }}>
-              {connectedPlayers.length}
-            </span>
-            <div className="flex -space-x-1 space-x-reverse mr-1">
-              {connectedPlayers.slice(0, 4).map((p) => (
-                <span key={p.deviceId} className="text-sm">
-                  {p.avatar}
-                </span>
-              ))}
-            </div>
+          {/* Connected players button with Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setShowPlayersDropdown(!showPlayersDropdown)}
+              className="flex items-center gap-1.5 bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 rounded-xl px-3 py-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
+              title="عرض قائمة اللاعبين المتواجدين"
+            >
+              <Users className="w-4 h-4 text-emerald-400" />
+              <span className="text-xs text-slate-300 font-bold" style={{ fontFamily: 'Cairo, sans-serif' }}>
+                {connectedPlayers.length}
+              </span>
+              <div className="flex -space-x-1 space-x-reverse mr-1">
+                {connectedPlayers.slice(0, 4).map((p) => (
+                  <span key={p.deviceId} className="text-sm">
+                    {p.avatar}
+                  </span>
+                ))}
+              </div>
+            </button>
+
+            {/* Dropdown Popover */}
+            <AnimatePresence>
+              {showPlayersDropdown && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowPlayersDropdown(false)}
+                  />
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full mt-2 right-0 w-80 bg-slate-900/95 border border-slate-700 rounded-2xl p-4 shadow-2xl z-50 text-right backdrop-blur-xl"
+                  >
+                    <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-800">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-emerald-400" />
+                        <span className="text-xs font-black text-white" style={{ fontFamily: 'Cairo, sans-serif' }}>
+                          اللاعبين المتواجدين ({connectedPlayers.length})
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => setShowPlayersDropdown(false)}
+                        className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {Object.values(room.players).length === 0 ? (
+                      <p className="text-xs text-slate-500 py-3 text-center" style={{ fontFamily: 'Cairo, sans-serif' }}>
+                        لا يوجد لاعبين منضمين حالياً
+                      </p>
+                    ) : (
+                      <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                        {Object.values(room.players).map((p) => (
+                          <div
+                            key={p.deviceId}
+                            className={`flex items-center justify-between p-2.5 rounded-xl border text-xs transition-colors ${
+                              p.isConnected
+                                ? 'bg-slate-800/60 border-slate-700/60'
+                                : 'bg-slate-950/40 border-slate-800/40 opacity-50'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <span className="text-2xl">{p.avatar}</span>
+                              <div>
+                                <div className="font-bold text-white text-xs" style={{ fontFamily: 'Cairo, sans-serif' }}>
+                                  {p.name}
+                                </div>
+                                <div
+                                  className={`text-[10px] font-bold ${
+                                    p.team === 'A' ? 'text-emerald-400' : 'text-violet-400'
+                                  }`}
+                                  style={{ fontFamily: 'Cairo, sans-serif' }}
+                                >
+                                  {p.team === 'A' ? `🦅 ${room.teams.A.name}` : `🐺 ${room.teams.B.name}`}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              {p.isConnected ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                  متصل
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-[10px] text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full">
+                                  غير متصل
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Single screen mode badge */}

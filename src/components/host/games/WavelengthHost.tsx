@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Lock, Eye, ArrowLeft, ArrowRight, Sparkles, HelpCircle } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { motion } from 'framer-motion';
+import { Lock, Eye, ArrowRight, Sparkles } from 'lucide-react';
 import { RoomState, WavelengthState } from '../../../types/game';
 import { usePartyStore } from '../../../store/usePartyStore';
 import ScoreBanner from '../../shared/ScoreBanner';
@@ -57,9 +57,12 @@ export default function WavelengthHost({ room, state }: Props) {
   const { emit } = usePartyStore();
   const [localDial, setLocalDial] = useState(state.teamDialValue);
 
+  // Sync local slider when dial moves from any player in real time
+  useEffect(() => {
+    setLocalDial(state.teamDialValue);
+  }, [state.teamDialValue]);
+
   const activeTeamState = room.teams[state.activeTeam];
-  const opposingTeamId = state.activeTeam === 'A' ? 'B' : 'A';
-  const opposingTeamState = room.teams[opposingTeamId];
   const psychicPlayer = room.players[state.psychicDeviceId];
 
   // Needle angle: 0% = -90deg (pointing LEFT), 50% = 0deg (pointing UP), 100% = +90deg (pointing RIGHT)
@@ -75,12 +78,12 @@ export default function WavelengthHost({ room, state }: Props) {
     emit('wavelength:lock_in', { roomCode: room.code });
   };
 
-  const handleOpponentPredict = (prediction: 'LEFT' | 'RIGHT') => {
-    emit('wavelength:opponent_predict', { roomCode: room.code, prediction });
-  };
-
   const handleForceReveal = () => {
     emit('wavelength:force_reveal', { roomCode: room.code });
+  };
+
+  const handleNextRound = () => {
+    emit('wavelength:next_round', { roomCode: room.code });
   };
 
   // SVG Gauge constants
@@ -146,7 +149,7 @@ export default function WavelengthHost({ room, state }: Props) {
         <ScoreBanner teams={room.teams} activeTeam={state.activeTeam} />
       </div>
 
-      {/* ─── SPECTRUM POLES BANNER (Enforced dir="ltr" so Left Pole is physically Left, Right Pole is Right) ── */}
+      {/* ─── SPECTRUM POLES BANNER ────────────────────────────────────────── */}
       <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 mb-4 text-center shadow-2xl">
         <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3" style={{ fontFamily: 'Cairo, sans-serif' }}>
           {state.card.category} — الجولة {state.roundNumber} من {state.maxRounds * 2}
@@ -449,8 +452,8 @@ export default function WavelengthHost({ room, state }: Props) {
           </svg>
         </div>
 
-        {/* Phase Indicator & Guidance */}
-        <div className="mt-4 text-center min-h-[48px]">
+        {/* Phase Indicator & Guidance & Next Round Button */}
+        <div className="mt-4 text-center min-h-[56px]">
           {state.subPhase === 'PSYCHIC_CLUE' && (
             <div className="text-slate-400 text-sm" style={{ fontFamily: 'Cairo, sans-serif' }}>
               دور البيشيك <span className="text-white font-bold">{psychicPlayer?.name}</span> في إرسال التلميح السري.
@@ -463,33 +466,34 @@ export default function WavelengthHost({ room, state }: Props) {
             </div>
           )}
 
-          {state.subPhase === 'OPPONENT_STEAL' && (
-            <div className="bg-violet-950/60 border border-violet-500/50 px-6 py-2.5 rounded-2xl inline-block shadow-lg">
-              <span className="text-violet-300 text-sm font-black" style={{ fontFamily: 'Cairo, sans-serif' }}>
-                فرصة سرقة لـ {opposingTeamState.name}: هل الهدف الحقيقي يمين أم يسار المؤشر الحالي ({state.teamDialValue}%)؟
-              </span>
-            </div>
-          )}
-
           {state.subPhase === 'REVEAL' && (
             <motion.div
               initial={{ scale: 0.85, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="bg-slate-900/90 border border-slate-700 px-6 py-3 rounded-2xl shadow-2xl inline-block"
+              className="space-y-4"
             >
-              <div className="text-xl md:text-2xl font-black text-white mb-1" style={{ fontFamily: 'Cairo, sans-serif' }}>
-                حصل {activeTeamState.name} على{' '}
-                <span className="text-emerald-400">+{state.lastRoundPoints.activeTeamEarned} نقاط</span>
+              <div className="bg-slate-900/90 border border-slate-700 px-8 py-3.5 rounded-3xl shadow-2xl inline-block">
+                <div className="text-2xl md:text-3xl font-black text-white mb-1" style={{ fontFamily: 'Cairo, sans-serif' }}>
+                  حصل {activeTeamState.name} على{' '}
+                  <span className="text-emerald-400 font-black">+{state.lastRoundPoints.activeTeamEarned} نقاط</span>
+                </div>
+                <div className="text-xs text-slate-400 mt-1 font-bold" style={{ fontFamily: 'Cairo, sans-serif' }}>
+                  الهدف الفعلي كان عند: <span className="text-emerald-300 font-mono text-sm">{state.targetCenter}%</span> — ومؤشر الفريق ثبت عند: <span className="text-white font-mono text-sm">{state.teamDialValue}%</span>
+                </div>
               </div>
-              {state.lastRoundPoints.opponentTeamEarned > 0 ? (
-                <div className="text-sm font-bold text-violet-400" style={{ fontFamily: 'Cairo, sans-serif' }}>
-                  🎯 نجح {opposingTeamState.name} في سرقة +1 نقطة!
-                </div>
-              ) : (
-                <div className="text-xs text-slate-500" style={{ fontFamily: 'Cairo, sans-serif' }}>
-                  لم يحصل الخصم على نقطة السرقة
-                </div>
-              )}
+
+              <div>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleNextRound}
+                  className="px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black rounded-2xl text-base shadow-2xl flex items-center justify-center gap-2.5 mx-auto glow-emerald cursor-pointer"
+                  style={{ fontFamily: 'Cairo, sans-serif' }}
+                >
+                  <span>السؤال التالي (الجولة التالية)</span>
+                  <ArrowRight className="w-5 h-5 stroke-[3]" />
+                </motion.button>
+              </div>
             </motion.div>
           )}
         </div>
@@ -528,39 +532,24 @@ export default function WavelengthHost({ room, state }: Props) {
               <span>تثبيت المؤشر</span>
             </button>
 
-            {/* Steal Left Button (Physically on Left in LTR layout) */}
-            <div className="flex items-center gap-2" style={{ direction: 'ltr' }}>
+            {state.subPhase === 'REVEAL' ? (
               <button
-                onClick={() => handleOpponentPredict('LEFT')}
-                disabled={state.subPhase !== 'OPPONENT_STEAL'}
-                className="px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 disabled:opacity-40 transition-colors shadow-lg"
+                onClick={handleNextRound}
+                className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black rounded-xl text-sm flex items-center gap-2 transition-all shadow-lg glow-emerald"
                 style={{ fontFamily: 'Cairo, sans-serif' }}
-                title="الهدف أقل من قيمة المؤشر (جهة اليسار)"
               >
-                <ArrowLeft className="w-4 h-4" />
-                <span>الخصم: يسار (&lt; {state.teamDialValue}%)</span>
+                <span>السؤال التالي ➡️</span>
               </button>
-
+            ) : (
               <button
-                onClick={() => handleOpponentPredict('RIGHT')}
-                disabled={state.subPhase !== 'OPPONENT_STEAL'}
-                className="px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 disabled:opacity-40 transition-colors shadow-lg"
+                onClick={handleForceReveal}
+                className="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold rounded-xl text-sm flex items-center gap-1.5 transition-colors shadow-lg"
                 style={{ fontFamily: 'Cairo, sans-serif' }}
-                title="الهدف أكثر من قيمة المؤشر (جهة اليمين)"
               >
-                <span>الخصم: يمين (&gt; {state.teamDialValue}%)</span>
-                <ArrowRight className="w-4 h-4" />
+                <Eye className="w-4 h-4" />
+                <span>كشف النتيجة</span>
               </button>
-            </div>
-
-            <button
-              onClick={handleForceReveal}
-              className="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold rounded-xl text-sm flex items-center gap-1.5 transition-colors shadow-lg"
-              style={{ fontFamily: 'Cairo, sans-serif' }}
-            >
-              <Eye className="w-4 h-4" />
-              <span>كشف النتيجة</span>
-            </button>
+            )}
           </div>
         </div>
       </HostOverrideDrawer>

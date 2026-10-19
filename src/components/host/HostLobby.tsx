@@ -55,14 +55,6 @@ const GAMES = [
   },
 ];
 
-const PRESET_TEAMS = [
-  { a: 'الصقور', b: 'الذئاب' },
-  { a: 'الهلال', b: 'النصر' },
-  { a: 'الملوك', b: 'السلاطين' },
-  { a: 'الهوامير', b: 'الدواهي' },
-  { a: 'الشباب', b: 'الشياب' },
-];
-
 export default function HostLobby({ room }: Props) {
   const { emit, baseUrl, setBaseUrl, lanIp, updateTeamNames, movePlayerTeam, kickPlayer } = usePartyStore();
   const [copied, setCopied] = useState(false);
@@ -88,12 +80,6 @@ export default function HostLobby({ room }: Props) {
   const handleSaveTeams = () => {
     updateTeamNames(teamAName, teamBName);
     setIsEditingTeams(false);
-  };
-
-  const handleApplyPreset = (a: string, b: string) => {
-    setTeamAName(a);
-    setTeamBName(b);
-    updateTeamNames(a, b);
   };
 
   return (
@@ -183,23 +169,6 @@ export default function HostLobby({ room }: Props) {
                     style={{ fontFamily: 'Cairo, sans-serif' }}
                   />
                 </div>
-              </div>
-
-              {/* Preset Quick Buttons */}
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs text-slate-400 font-bold ml-1" style={{ fontFamily: 'Cairo, sans-serif' }}>
-                  اقتراحات سريعة:
-                </span>
-                {PRESET_TEAMS.map((preset, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleApplyPreset(preset.a, preset.b)}
-                    className="px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-bold text-slate-300 hover:text-white transition-colors"
-                    style={{ fontFamily: 'Cairo, sans-serif' }}
-                  >
-                    {preset.a} ضد {preset.b}
-                  </button>
-                ))}
               </div>
             </motion.div>
           )}

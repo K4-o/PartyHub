@@ -28,7 +28,7 @@ import {
   wavelengthSubmitClue,
   wavelengthMoveDial,
   wavelengthLockIn,
-  wavelengthOpponentPredict,
+  wavelengthNextRound,
   revealWavelength,
   cleanupWavelength,
 } from './engines/WavelengthEngine';
@@ -268,8 +268,8 @@ io.on('connection', (socket) => {
     wavelengthLockIn(io, data.roomCode);
   });
 
-  socket.on('wavelength:opponent_predict', (data: { roomCode: string; prediction: 'LEFT' | 'RIGHT' }) => {
-    wavelengthOpponentPredict(io, data.roomCode, data.prediction);
+  socket.on('wavelength:next_round', (data: { roomCode: string }) => {
+    wavelengthNextRound(io, data.roomCode);
   });
 
   socket.on('wavelength:force_reveal', (data: { roomCode: string }) => {

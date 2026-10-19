@@ -64,16 +64,14 @@ export interface WavelengthCard {
 
 export interface WavelengthState {
   gameId: 'WAVELENGTH';
-  subPhase: 'PSYCHIC_CLUE' | 'TEAM_GUESS' | 'OPPONENT_STEAL' | 'REVEAL';
+  subPhase: 'PSYCHIC_CLUE' | 'TEAM_GUESS' | 'REVEAL';
   activeTeam: TeamId;
   psychicDeviceId: string;
   card: WavelengthCard;
   clueText: string;
   targetCenter: number;
   teamDialValue: number;
-  opponentPrediction: 'LEFT' | 'RIGHT' | null;
-  stealTimeRemaining: number;
-  lastRoundPoints: { activeTeamEarned: number; opponentTeamEarned: number };
+  lastRoundPoints: { activeTeamEarned: number };
   roundNumber: number;
   maxRounds: number;
 }

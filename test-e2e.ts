@@ -167,41 +167,37 @@ async function runE2ETest() {
   }
   console.log(`✅ Wavelength clue submitted: SubPhase = ${currentRoom.gameState.subPhase}`);
 
-  // Move dial to a position known relative to targetCenter
-  // Let's set dial to 80 if targetCenter < 70, or to 20 if targetCenter >= 70
-  const chosenDial = targetCenter < 70 ? 80 : 20;
-  hostSocket.emit('wavelength:move_dial', { roomCode, value: chosenDial });
+  // Move dial to a position (e.g. 50 or near targetCenter)
+  hostSocket.emit('wavelength:move_dial', { roomCode, value: targetCenter });
   await new Promise((r) => setTimeout(r, 200));
+  if (currentRoom.gameState.teamDialValue !== targetCenter) {
+    throw new Error('Wavelength move_dial sync failed');
+  }
+  console.log(`✅ Wavelength dial moved and synced in real time: dial = ${currentRoom.gameState.teamDialValue}%`);
 
-  // Lock In
+  // Lock In (direct reveal, NO steal phase)
   hostSocket.emit('wavelength:lock_in', { roomCode });
   await new Promise((r) => setTimeout(r, 300));
-  if (currentRoom.gameState.subPhase !== 'OPPONENT_STEAL') {
-    throw new Error('Wavelength lock in failed');
-  }
-  console.log(`✅ Wavelength locked in: Team dial = ${currentRoom.gameState.teamDialValue}%, SubPhase = ${currentRoom.gameState.subPhase}`);
-
-  // Determine correct steal direction:
-  // If targetCenter < chosenDial: target is to the LEFT, so 'LEFT' should award 1 point.
-  // If targetCenter > chosenDial: target is to the RIGHT, so 'RIGHT' should award 1 point.
-  const expectedWinningDirection = targetCenter < chosenDial ? 'LEFT' : 'RIGHT';
-  console.log(`ℹ️ Target = ${targetCenter}%, Dial = ${chosenDial}%. Target is to the ${expectedWinningDirection}. Testing direction accuracy...`);
-
-  hostSocket.emit('wavelength:opponent_predict', { roomCode, prediction: expectedWinningDirection });
-  await new Promise((r) => setTimeout(r, 400));
   if (currentRoom.gameState.subPhase !== 'REVEAL') {
-    throw new Error('Wavelength reveal failed');
+    throw new Error(`Wavelength lock_in should directly reveal! Expected REVEAL, got ${currentRoom.gameState.subPhase}`);
   }
+  console.log(`✅ Wavelength direct reveal verified: Active team earned ${currentRoom.gameState.lastRoundPoints.activeTeamEarned} pts (Bullseye 4 pts)!`);
 
-  const diff = Math.abs(targetCenter - chosenDial);
-  if (diff > 3) {
-    if (currentRoom.gameState.lastRoundPoints.opponentTeamEarned !== 1) {
-      throw new Error(`Opponent steal betting direction failed! Predicted ${expectedWinningDirection} but got ${currentRoom.gameState.lastRoundPoints.opponentTeamEarned} points`);
-    }
-    console.log(`✅ Wavelength OPPONENT STEAL DIRECTION ACCURACY CONFIRMED: Correctly predicted ${expectedWinningDirection} and earned +1 point!`);
-  } else {
-    console.log(`✅ Wavelength Bullseye hit (diff = ${diff})! Active team scored 4 points.`);
+  // Verify it does NOT auto-advance automatically after 1 second
+  await new Promise((r) => setTimeout(r, 1200));
+  if (currentRoom.gameState.subPhase !== 'REVEAL') {
+    throw new Error('Wavelength should NOT auto-advance without host action!');
   }
+  console.log(`✅ Verified NO auto-advance: Room stays in REVEAL waiting for host`);
+
+  // Host triggers next round
+  const prevRound = currentRoom.gameState.roundNumber;
+  hostSocket.emit('wavelength:next_round', { roomCode });
+  await new Promise((r) => setTimeout(r, 300));
+  if (currentRoom.gameState.subPhase !== 'PSYCHIC_CLUE' || currentRoom.gameState.roundNumber !== prevRound + 1) {
+    throw new Error('Host next_round failed to advance to new round!');
+  }
+  console.log(`✅ Host next_round verified: Advanced to Round ${currentRoom.gameState.roundNumber}, ActiveTeam = ${currentRoom.gameState.activeTeam}`);
 
   // ─── GAME 3: FAMILY FEUD (ستيف هارفي) ───────────────────────────────────
   console.log('\n--- Testing Game 3: FAMILY FEUD (ستيف هارفي) ---');

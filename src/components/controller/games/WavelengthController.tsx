@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, Sparkles, ArrowLeft, ArrowRight, Check, Minus, Plus } from 'lucide-react';
+import { Lock, Sparkles } from 'lucide-react';
 import { RoomState, WavelengthState, Player } from '../../../types/game';
 import { usePartyStore } from '../../../store/usePartyStore';
 import { haptics } from '../../../utils/haptics';
@@ -16,22 +16,14 @@ export default function WavelengthController({ room, state, player }: Props) {
 
   const isPsychic = player.deviceId === state.psychicDeviceId;
   const isActiveTeam = player.team === state.activeTeam;
-  const isOpposingTeam = !isActiveTeam;
 
   const [clueInput, setClueInput] = useState('');
   const [localDial, setLocalDial] = useState(state.teamDialValue);
-  const [hasVotedSteal, setHasVotedSteal] = useState(false);
 
+  // Keep local slider synced with the server/other teammates in real time
   useEffect(() => {
     setLocalDial(state.teamDialValue);
   }, [state.teamDialValue]);
-
-  // Reset steal vote state when phase changes
-  useEffect(() => {
-    if (state.subPhase !== 'OPPONENT_STEAL') {
-      setHasVotedSteal(false);
-    }
-  }, [state.subPhase]);
 
   const handleSubmitClue = (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,12 +50,6 @@ export default function WavelengthController({ room, state, player }: Props) {
     emit('wavelength:lock_in', { roomCode: room.code });
   };
 
-  const handleOpponentPredict = (prediction: 'LEFT' | 'RIGHT') => {
-    haptics.medium();
-    setHasVotedSteal(true);
-    emit('wavelength:opponent_predict', { roomCode: room.code, prediction });
-  };
-
   const myTeamName = room.teams[player.team]?.name || (player.team === 'A' ? 'فريق A' : 'فريق B');
   const activeTeamName = room.teams[state.activeTeam]?.name || (state.activeTeam === 'A' ? 'فريق A' : 'فريق B');
 
@@ -79,7 +65,12 @@ export default function WavelengthController({ room, state, player }: Props) {
           <span className="text-xs font-bold text-slate-300" style={{ fontFamily: 'Cairo, sans-serif' }}>
             {player.name}
           </span>
-          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${player.team === 'A' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-violet-500/20 text-violet-400'}`} style={{ fontFamily: 'Cairo, sans-serif' }}>
+          <span
+            className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold ${
+              player.team === 'A' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-violet-500/20 text-violet-400'
+            }`}
+            style={{ fontFamily: 'Cairo, sans-serif' }}
+          >
             {myTeamName}
           </span>
         </div>
@@ -95,7 +86,7 @@ export default function WavelengthController({ room, state, player }: Props) {
       {/* ─── SPECTRUM POLES SUMMARY (Pinned physical Left / Right) ────────── */}
       <div className="bg-slate-900/90 border border-slate-800 p-3 rounded-2xl my-2 text-center text-xs shadow-lg">
         <div className="grid grid-cols-2 gap-2 font-bold mb-1" style={{ direction: 'ltr' }}>
-          <div className="bg-blue-950/40 border border-blue-700/40 p-2 rounded-xl text-left">
+          <div className="bg-blue-950/40 border border-blue-700/40 p-2.5 rounded-xl text-left">
             <span className="text-[10px] text-blue-400 block mb-0.5" style={{ fontFamily: 'Cairo, sans-serif' }}>
               ⬅️ القطب الأيسر (0%)
             </span>
@@ -104,7 +95,7 @@ export default function WavelengthController({ room, state, player }: Props) {
             </span>
           </div>
 
-          <div className="bg-purple-950/40 border border-purple-700/40 p-2 rounded-xl text-right">
+          <div className="bg-purple-950/40 border border-purple-700/40 p-2.5 rounded-xl text-right">
             <span className="text-[10px] text-purple-400 block mb-0.5" style={{ fontFamily: 'Cairo, sans-serif' }}>
               القطب الأيمن (100%) ➡️
             </span>
@@ -115,7 +106,10 @@ export default function WavelengthController({ room, state, player }: Props) {
         </div>
 
         {state.clueText && (
-          <div className="mt-2 text-emerald-400 font-bold text-sm bg-emerald-950/40 border border-emerald-500/30 py-1.5 px-3 rounded-xl inline-block" style={{ fontFamily: 'Cairo, sans-serif' }}>
+          <div
+            className="mt-2 text-emerald-400 font-bold text-sm bg-emerald-950/40 border border-emerald-500/30 py-1.5 px-3 rounded-xl inline-block"
+            style={{ fontFamily: 'Cairo, sans-serif' }}
+          >
             التلميح: "{state.clueText}"
           </div>
         )}
@@ -282,123 +276,47 @@ export default function WavelengthController({ room, state, player }: Props) {
               </div>
             </div>
           ) : (
-            <div className="py-8 space-y-3">
+            <div className="py-8 space-y-4">
               <span className="text-5xl block">👀</span>
               <h3 className="text-xl font-bold text-white" style={{ fontFamily: 'Cairo, sans-serif' }}>
-                راقب مؤشر {activeTeamName} على الشاشة...
+                فريق {activeTeamName} يحركون المؤشر...
               </h3>
-              <p className="text-slate-400 text-xs" style={{ fontFamily: 'Cairo, sans-serif' }}>
-                استعد لفرصة السرقة فور تثبيتهم للمؤشر!
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ─── SUBPHASE 3: OPPONENT_STEAL (Accurate Physical Left / Right Buttons) ─ */}
-      {state.subPhase === 'OPPONENT_STEAL' && (
-        <div className="my-auto text-center space-y-4 max-w-sm mx-auto w-full">
-          {isOpposingTeam ? (
-            <div className="space-y-4">
-              <span className="text-5xl block animate-bounce">🎯</span>
-              <h2 className="text-2xl font-black text-white" style={{ fontFamily: 'Cairo, sans-serif' }}>
-                فرصة السرقة! (+1 نقطة)
-              </h2>
-              <div className="bg-slate-900/90 border border-violet-500/40 p-3 rounded-2xl">
-                <span className="text-slate-300 text-xs block mb-1" style={{ fontFamily: 'Cairo, sans-serif' }}>
-                  مؤشر الخصم الحالي مثبت عند:
-                </span>
-                <span className="text-2xl font-black text-white font-mono block">
-                  {state.teamDialValue}%
-                </span>
-                <p className="text-violet-300 text-xs mt-1 font-bold" style={{ fontFamily: 'Cairo, sans-serif' }}>
-                  هل الهدف الحقيقي يقع على يسار المؤشر أم على يمينه؟
-                </p>
+              <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl inline-block shadow-lg">
+                <span className="text-xs text-slate-400 block mb-1">المؤشر الحالي:</span>
+                <span className="text-4xl font-black text-cyan-400 font-mono">{state.teamDialValue}%</span>
               </div>
-
-              {hasVotedSteal ? (
-                <div className="p-4 bg-emerald-950/60 border border-emerald-500/50 rounded-2xl text-emerald-300 text-sm font-bold flex items-center justify-center gap-2">
-                  <Check className="w-5 h-5 text-emerald-400" />
-                  <span style={{ fontFamily: 'Cairo, sans-serif' }}>تم تسجيل رهانك! بانتظار الكشف على الشاشة...</span>
-                </div>
-              ) : (
-                /* Strict LTR Container: Physical Left button is on Left, Right button on Right */
-                <div className="grid grid-cols-2 gap-3" style={{ direction: 'ltr' }}>
-                  {/* Physical Left Button: targetCenter < teamDialValue */}
-                  <button
-                    onClick={() => handleOpponentPredict('LEFT')}
-                    className="py-5 px-3 bg-gradient-to-b from-blue-700 to-blue-900 hover:from-blue-600 hover:to-blue-800 border-2 border-blue-400/60 active:scale-95 text-white font-black rounded-2xl flex flex-col items-center justify-center gap-1.5 shadow-xl transition-all"
-                    style={{ fontFamily: 'Cairo, sans-serif' }}
-                  >
-                    <ArrowLeft className="w-7 h-7 text-blue-300" />
-                    <span className="text-base">إلى اليسار</span>
-                    <span className="text-[11px] text-blue-200 font-bold">
-                      أقل من {state.teamDialValue}%
-                    </span>
-                    <span className="text-[10px] text-blue-300/80 font-normal">
-                      (جهة {state.card.leftPole})
-                    </span>
-                  </button>
-
-                  {/* Physical Right Button: targetCenter > teamDialValue */}
-                  <button
-                    onClick={() => handleOpponentPredict('RIGHT')}
-                    className="py-5 px-3 bg-gradient-to-b from-purple-700 to-purple-900 hover:from-purple-600 hover:to-purple-800 border-2 border-purple-400/60 active:scale-95 text-white font-black rounded-2xl flex flex-col items-center justify-center gap-1.5 shadow-xl transition-all"
-                    style={{ fontFamily: 'Cairo, sans-serif' }}
-                  >
-                    <ArrowRight className="w-7 h-7 text-purple-300" />
-                    <span className="text-base">إلى اليمين</span>
-                    <span className="text-[11px] text-purple-200 font-bold">
-                      أكثر من {state.teamDialValue}%
-                    </span>
-                    <span className="text-[10px] text-purple-300/80 font-normal">
-                      (جهة {state.card.rightPole})
-                    </span>
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="py-8 space-y-3">
-              <span className="text-5xl block animate-pulse">🤞</span>
-              <h3 className="text-xl font-bold text-white" style={{ fontFamily: 'Cairo, sans-serif' }}>
-                خصمكم يراهن الآن على سرقة النقطة...
-              </h3>
               <p className="text-slate-400 text-xs" style={{ fontFamily: 'Cairo, sans-serif' }}>
-                راقبوا الشاشة الرئيسية لكشف الهدف والنتيجة!
+                راقب الشاشة لمعرفة أين سيثبتون مؤشرهم!
               </p>
             </div>
           )}
         </div>
       )}
 
-      {/* ─── SUBPHASE 4: REVEAL ───────────────────────────────────────────── */}
+      {/* ─── SUBPHASE 3: REVEAL ───────────────────────────────────────────── */}
       {state.subPhase === 'REVEAL' && (
-        <div className="my-auto text-center space-y-4 max-w-sm mx-auto">
-          <span className="text-6xl block">🎉</span>
+        <div className="my-auto text-center space-y-5 max-w-sm mx-auto">
+          <span className="text-6xl block animate-bounce">🎉</span>
           <h2 className="text-2xl font-black text-white" style={{ fontFamily: 'Cairo, sans-serif' }}>
             تم كشف الهدف!
           </h2>
-          <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 text-sm space-y-2.5 shadow-xl">
+          <div className="bg-slate-900 p-5 rounded-3xl border border-slate-800 text-sm space-y-3 shadow-2xl">
             <div className="flex justify-between" style={{ fontFamily: 'Cairo, sans-serif' }}>
               <span className="text-slate-400">الهدف الحقيقي:</span>
-              <span className="text-emerald-400 font-black font-mono">{state.targetCenter}%</span>
+              <span className="text-emerald-400 font-black font-mono text-base">{state.targetCenter}%</span>
             </div>
             <div className="flex justify-between" style={{ fontFamily: 'Cairo, sans-serif' }}>
               <span className="text-slate-400">مؤشر {activeTeamName}:</span>
-              <span className="text-white font-black font-mono">{state.teamDialValue}%</span>
+              <span className="text-white font-black font-mono text-base">{state.teamDialValue}%</span>
             </div>
-            <div className="flex justify-between border-t border-slate-800 pt-2 font-bold" style={{ fontFamily: 'Cairo, sans-serif' }}>
+            <div className="flex justify-between border-t border-slate-800 pt-2.5 font-bold" style={{ fontFamily: 'Cairo, sans-serif' }}>
               <span className="text-slate-400">نقاط {activeTeamName}:</span>
-              <span className="text-emerald-400 font-black">+{state.lastRoundPoints.activeTeamEarned} نقاط</span>
+              <span className="text-emerald-400 font-black text-lg">+{state.lastRoundPoints.activeTeamEarned} نقاط</span>
             </div>
-            {state.lastRoundPoints.opponentTeamEarned > 0 && (
-              <div className="flex justify-between text-violet-400 font-bold" style={{ fontFamily: 'Cairo, sans-serif' }}>
-                <span>سرقة الخصم:</span>
-                <span>+1 نقطة 🎯</span>
-              </div>
-            )}
           </div>
+          <p className="text-slate-400 text-xs font-bold animate-pulse" style={{ fontFamily: 'Cairo, sans-serif' }}>
+            بانتظار المضيف لبدء السؤال التالي... ⏳
+          </p>
         </div>
       )}
 
