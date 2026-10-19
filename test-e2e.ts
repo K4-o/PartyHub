@@ -3,12 +3,17 @@ import { io, Socket } from 'socket.io-client';
 const SERVER_URL = 'http://localhost:3001';
 
 async function runE2ETest() {
-  console.log('🧪 Starting PartyHub End-to-End Autonomous Verification...\n');
+  console.log('🧪 Starting PartyHub Comprehensive End-to-End Autonomous Verification...\n');
 
   // 1. Host connection
   const hostSocket: Socket = io(SERVER_URL, { transports: ['websocket'] });
   await new Promise<void>((resolve) => hostSocket.on('connect', resolve));
   console.log('✅ 1. Host socket connected successfully');
+
+  let currentRoom: any;
+  hostSocket.on('room:state', (r: any) => {
+    currentRoom = r;
+  });
 
   // Create Room
   const { roomCode, lanIp } = await new Promise<{ roomCode: string; lanIp: string }>((resolve) => {
@@ -46,17 +51,62 @@ async function runE2ETest() {
   const teamA = Object.values(p2Join.room.players).find((p: any) => p.team === 'A');
   const teamB = Object.values(p2Join.room.players).find((p: any) => p.team === 'B');
   if (!teamA || !teamB) throw new Error('Teams not balanced correctly');
-  console.log('✅ 5. Teams automatically balanced: Team A (الصقور) and Team B (الذئاب)');
+  console.log('✅ 5. Teams automatically balanced: Team A and Team B');
+
+  // ─── TEST: HOST TEAM MANAGEMENT (تعديل أسماء الفرق ونقل وطرد اللاعبين) ───
+  console.log('\n--- Testing Host Team & Player Management ---');
+
+  // A. Rename Teams
+  hostSocket.emit('host:update_team_names', { roomCode, teamAName: 'الملوك', teamBName: 'السلاطين' });
+  await new Promise((r) => setTimeout(r, 200));
+  if (currentRoom.teams.A.name !== 'الملوك' || currentRoom.teams.B.name !== 'السلاطين') {
+    throw new Error(`Team rename failed. Expected الملوك/السلاطين, got ${currentRoom.teams.A.name}/${currentRoom.teams.B.name}`);
+  }
+  console.log(`✅ Host team renaming verified: A="${currentRoom.teams.A.name}", B="${currentRoom.teams.B.name}"`);
+
+  // B. Move Player Team
+  hostSocket.emit('host:move_player_team', { roomCode, deviceId: 'dev_salim_01', targetTeam: 'B' });
+  await new Promise((r) => setTimeout(r, 200));
+  if (currentRoom.players['dev_salim_01'].team !== 'B') {
+    throw new Error('Host moving player to Team B failed');
+  }
+  console.log(`✅ Host move player verified: Salim moved to Team B`);
+
+  hostSocket.emit('host:move_player_team', { roomCode, deviceId: 'dev_salim_01', targetTeam: 'A' });
+  await new Promise((r) => setTimeout(r, 200));
+  if (currentRoom.players['dev_salim_01'].team !== 'A') {
+    throw new Error('Host moving player back to Team A failed');
+  }
+  console.log(`✅ Host move player verified: Salim returned to Team A`);
+
+  // C. Kick Player
+  const p3Socket: Socket = io(SERVER_URL, { transports: ['websocket'] });
+  await new Promise<void>((resolve) => p3Socket.on('connect', resolve));
+  await new Promise<any>((resolve) => {
+    p3Socket.emit(
+      'player:join',
+      { roomCode, deviceId: 'dev_temp_03', name: 'لاعب مؤقت', avatar: '👻' },
+      (res: any) => resolve(res)
+    );
+  });
+  await new Promise((r) => setTimeout(r, 200));
+  if (!currentRoom.players['dev_temp_03']) {
+    throw new Error('Temporary player failed to join');
+  }
+  console.log(`✅ Temp player joined: ${currentRoom.players['dev_temp_03'].name}`);
+
+  hostSocket.emit('host:kick_player', { roomCode, deviceId: 'dev_temp_03' });
+  await new Promise((r) => setTimeout(r, 200));
+  if (currentRoom.players['dev_temp_03']) {
+    throw new Error('Host kick player failed; player still in room');
+  }
+  console.log(`✅ Host kick player verified: dev_temp_03 kicked and removed`);
+  p3Socket.disconnect();
 
   // ─── GAME 1: TABOO (قول بس لا تقول) ───────────────────────────────────────
   console.log('\n--- Testing Game 1: TABOO (قول بس لا تقول) ---');
   hostSocket.emit('host:select_game', { roomCode, gameId: 'TABOO' });
   await new Promise((r) => setTimeout(r, 200));
-
-  let currentRoom: any;
-  hostSocket.on('room:state', (r: any) => {
-    currentRoom = r;
-  });
 
   hostSocket.emit('host:start_game', { roomCode });
   await new Promise((r) => setTimeout(r, 300));
@@ -106,18 +156,21 @@ async function runE2ETest() {
   if (currentRoom?.gameState?.gameId !== 'WAVELENGTH' || currentRoom?.gameState?.subPhase !== 'PSYCHIC_CLUE') {
     throw new Error('Wavelength failed to start into PSYCHIC_CLUE phase');
   }
-  console.log(`✅ Wavelength started: Target = ${currentRoom.gameState.targetCenter}%, Poles = "${currentRoom.gameState.card.leftPole}" vs "${currentRoom.gameState.card.rightPole}"`);
+  const targetCenter = currentRoom.gameState.targetCenter;
+  console.log(`✅ Wavelength started: Target = ${targetCenter}%, Poles = "${currentRoom.gameState.card.leftPole}" vs "${currentRoom.gameState.card.rightPole}"`);
 
   // Psychic clue submission
-  hostSocket.emit('wavelength:submit_clue', { roomCode, clueText: 'شاورما على الحطب' });
+  hostSocket.emit('wavelength:submit_clue', { roomCode, clueText: 'قهوة سعودية معتدلة الهيل' });
   await new Promise((r) => setTimeout(r, 300));
-  if (currentRoom.gameState.subPhase !== 'TEAM_GUESS' || currentRoom.gameState.clueText !== 'شاورما على الحطب') {
+  if (currentRoom.gameState.subPhase !== 'TEAM_GUESS' || currentRoom.gameState.clueText !== 'قهوة سعودية معتدلة الهيل') {
     throw new Error('Wavelength clue submission failed');
   }
   console.log(`✅ Wavelength clue submitted: SubPhase = ${currentRoom.gameState.subPhase}`);
 
-  // Move dial
-  hostSocket.emit('wavelength:move_dial', { roomCode, value: 65 });
+  // Move dial to a position known relative to targetCenter
+  // Let's set dial to 80 if targetCenter < 70, or to 20 if targetCenter >= 70
+  const chosenDial = targetCenter < 70 ? 80 : 20;
+  hostSocket.emit('wavelength:move_dial', { roomCode, value: chosenDial });
   await new Promise((r) => setTimeout(r, 200));
 
   // Lock In
@@ -128,13 +181,27 @@ async function runE2ETest() {
   }
   console.log(`✅ Wavelength locked in: Team dial = ${currentRoom.gameState.teamDialValue}%, SubPhase = ${currentRoom.gameState.subPhase}`);
 
-  // Opponent predict
-  hostSocket.emit('wavelength:opponent_predict', { roomCode, prediction: 'LEFT' });
+  // Determine correct steal direction:
+  // If targetCenter < chosenDial: target is to the LEFT, so 'LEFT' should award 1 point.
+  // If targetCenter > chosenDial: target is to the RIGHT, so 'RIGHT' should award 1 point.
+  const expectedWinningDirection = targetCenter < chosenDial ? 'LEFT' : 'RIGHT';
+  console.log(`ℹ️ Target = ${targetCenter}%, Dial = ${chosenDial}%. Target is to the ${expectedWinningDirection}. Testing direction accuracy...`);
+
+  hostSocket.emit('wavelength:opponent_predict', { roomCode, prediction: expectedWinningDirection });
   await new Promise((r) => setTimeout(r, 400));
   if (currentRoom.gameState.subPhase !== 'REVEAL') {
     throw new Error('Wavelength reveal failed');
   }
-  console.log(`✅ Wavelength revealed: Active team earned ${currentRoom.gameState.lastRoundPoints.activeTeamEarned} pts, Opponent earned ${currentRoom.gameState.lastRoundPoints.opponentTeamEarned} pts`);
+
+  const diff = Math.abs(targetCenter - chosenDial);
+  if (diff > 3) {
+    if (currentRoom.gameState.lastRoundPoints.opponentTeamEarned !== 1) {
+      throw new Error(`Opponent steal betting direction failed! Predicted ${expectedWinningDirection} but got ${currentRoom.gameState.lastRoundPoints.opponentTeamEarned} points`);
+    }
+    console.log(`✅ Wavelength OPPONENT STEAL DIRECTION ACCURACY CONFIRMED: Correctly predicted ${expectedWinningDirection} and earned +1 point!`);
+  } else {
+    console.log(`✅ Wavelength Bullseye hit (diff = ${diff})! Active team scored 4 points.`);
+  }
 
   // ─── GAME 3: FAMILY FEUD (ستيف هارفي) ───────────────────────────────────
   console.log('\n--- Testing Game 3: FAMILY FEUD (ستيف هارفي) ---');
@@ -190,7 +257,7 @@ async function runE2ETest() {
   if (currentRoom.gameState.subPhase !== 'DISCUSSION') {
     throw new Error('Spyfall discussion failed to start');
   }
-  console.log(`✅ Spyfall discussion started: 12 locations rendered, Asker = ${currentRoom.gameState.currentAskerId}`);
+  console.log(`✅ Spyfall discussion started: Asker = ${currentRoom.gameState.currentAskerId}`);
 
   // Start voting
   hostSocket.emit('spyfall:start_voting', { roomCode });
@@ -205,7 +272,7 @@ async function runE2ETest() {
   p1Socket.disconnect();
   p2Socket.disconnect();
 
-  console.log('\n🎉 ALL 4 GAMES & SOCKET FLOWS FULLY VERIFIED WITH 100% SUCCESS!');
+  console.log('\n🎉 ALL TESTS PASSED! HOST CONTROLS, DIRECTION ACCURACY & 4 GAMES VERIFIED WITH 100% SUCCESS!');
   process.exit(0);
 }
 

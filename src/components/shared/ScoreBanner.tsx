@@ -17,7 +17,7 @@ export default function ScoreBanner({ teams, activeTeam, compact = false }: Prop
           }`}
         >
           <span className="text-emerald-400 font-bold text-sm" style={{ fontFamily: 'Cairo, sans-serif' }}>
-            الصقور
+            {teams.A.name || 'الصقور'}
           </span>
           <span className="text-white font-black text-lg">{teams.A.score}</span>
         </div>
@@ -29,7 +29,7 @@ export default function ScoreBanner({ teams, activeTeam, compact = false }: Prop
         >
           <span className="text-white font-black text-lg">{teams.B.score}</span>
           <span className="text-violet-400 font-bold text-sm" style={{ fontFamily: 'Cairo, sans-serif' }}>
-            الذئاب
+            {teams.B.name || 'الذئاب'}
           </span>
         </div>
       </div>

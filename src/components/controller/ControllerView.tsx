@@ -41,9 +41,9 @@ export default function ControllerView() {
           </h2>
           <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
             <span className="text-xs text-slate-400 block mb-1">النتيجة النهائية:</span>
-            <div className="flex justify-around text-lg font-black mt-2">
-              <span className="text-emerald-400">🦅 الصقور: {room.teams.A.score}</span>
-              <span className="text-violet-400">🐺 الذئاب: {room.teams.B.score}</span>
+            <div className="flex justify-around text-lg font-black mt-2" style={{ fontFamily: 'Cairo, sans-serif' }}>
+              <span className="text-emerald-400">🦅 {room.teams.A.name}: {room.teams.A.score}</span>
+              <span className="text-violet-400">🐺 {room.teams.B.name}: {room.teams.B.score}</span>
             </div>
           </div>
           <p className="text-slate-400 text-xs" style={{ fontFamily: 'Cairo, sans-serif' }}>

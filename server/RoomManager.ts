@@ -164,3 +164,40 @@ export function getConnectedPlayers(room: RoomState): Player[] {
 export function getTeamPlayers(room: RoomState, team: TeamId): Player[] {
   return Object.values(room.players).filter(p => p.team === team && p.isConnected);
 }
+
+export function updateTeamNames(
+  roomCode: string,
+  teamAName?: string,
+  teamBName?: string
+): RoomState | undefined {
+  const room = rooms.get(roomCode);
+  if (!room) return undefined;
+  if (teamAName && teamAName.trim()) room.teams.A.name = teamAName.trim();
+  if (teamBName && teamBName.trim()) room.teams.B.name = teamBName.trim();
+  return room;
+}
+
+export function movePlayerTeam(
+  roomCode: string,
+  deviceId: string,
+  targetTeam: TeamId
+): RoomState | undefined {
+  const room = rooms.get(roomCode);
+  if (!room) return undefined;
+  const player = room.players[deviceId];
+  if (player) {
+    player.team = targetTeam;
+  }
+  return room;
+}
+
+export function kickPlayer(
+  roomCode: string,
+  deviceId: string
+): RoomState | undefined {
+  const room = rooms.get(roomCode);
+  if (!room) return undefined;
+  delete room.players[deviceId];
+  return room;
+}
+

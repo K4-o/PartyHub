@@ -41,6 +41,9 @@ interface PartyStore {
   setBaseUrl: (url: string) => void;
   setLanIp: (ip: string) => void;
   clearGameOver: () => void;
+  updateTeamNames: (teamAName?: string, teamBName?: string) => void;
+  movePlayerTeam: (deviceId: string, targetTeam: 'A' | 'B') => void;
+  kickPlayer: (deviceId: string) => void;
 }
 
 function getOrCreateDeviceId(): string {
@@ -182,4 +185,16 @@ export const usePartyStore = create<PartyStore>((set, get) => ({
   setBaseUrl: (url) => set({ baseUrl: url }),
   setLanIp: (ip) => set({ lanIp: ip }),
   clearGameOver: () => set({ gameOverData: null }),
+  updateTeamNames: (teamAName, teamBName) => {
+    const { socket, roomCode } = get();
+    if (socket && roomCode) socket.emit('host:update_team_names', { roomCode, teamAName, teamBName });
+  },
+  movePlayerTeam: (deviceId, targetTeam) => {
+    const { socket, roomCode } = get();
+    if (socket && roomCode) socket.emit('host:move_player_team', { roomCode, deviceId, targetTeam });
+  },
+  kickPlayer: (deviceId) => {
+    const { socket, roomCode } = get();
+    if (socket && roomCode) socket.emit('host:kick_player', { roomCode, deviceId });
+  },
 }));

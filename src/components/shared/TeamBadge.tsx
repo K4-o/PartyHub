@@ -2,17 +2,20 @@ import { TeamId } from '../../types/game';
 
 interface Props {
   team: TeamId;
+  name?: string;
   size?: 'sm' | 'md' | 'lg';
   showLabel?: boolean;
 }
 
-export default function TeamBadge({ team, size = 'md', showLabel = true }: Props) {
+export default function TeamBadge({ team, name, size = 'md', showLabel = true }: Props) {
   const isA = team === 'A';
   const sizeClasses = {
     sm: 'px-2 py-0.5 text-xs',
     md: 'px-3 py-1 text-sm',
     lg: 'px-4 py-2 text-base',
   };
+
+  const displayName = name || (isA ? 'الصقور' : 'الذئاب');
 
   return (
     <span
@@ -24,7 +27,7 @@ export default function TeamBadge({ team, size = 'md', showLabel = true }: Props
       style={{ fontFamily: 'Cairo, sans-serif' }}
     >
       {isA ? '🦅' : '🐺'}
-      {showLabel && (isA ? ' الصقور' : ' الذئاب')}
+      {showLabel && ` ${displayName}`}
     </span>
   );
 }

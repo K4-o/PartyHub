@@ -19,6 +19,11 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+# Screenshots and temp media
+*.png
+*.jpg
+
+
 # Editor
 .vscode
 .idea

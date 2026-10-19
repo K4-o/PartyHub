@@ -11,6 +11,9 @@ import {
   updateRoomSettings,
   addSocketToDevice,
   getDeviceFromSocket,
+  updateTeamNames,
+  movePlayerTeam,
+  kickPlayer,
 } from './RoomManager';
 import {
   startTabooGame,
@@ -114,6 +117,21 @@ io.on('connection', (socket) => {
 
   socket.on('host:update_settings', (data: { roomCode: string; settings: Partial<RoomState['settings']> }) => {
     const room = updateRoomSettings(data.roomCode, data.settings);
+    if (room) io.to(data.roomCode).emit('room:state', room);
+  });
+
+  socket.on('host:update_team_names', (data: { roomCode: string; teamAName?: string; teamBName?: string }) => {
+    const room = updateTeamNames(data.roomCode, data.teamAName, data.teamBName);
+    if (room) io.to(data.roomCode).emit('room:state', room);
+  });
+
+  socket.on('host:move_player_team', (data: { roomCode: string; deviceId: string; targetTeam: 'A' | 'B' }) => {
+    const room = movePlayerTeam(data.roomCode, data.deviceId, data.targetTeam);
+    if (room) io.to(data.roomCode).emit('room:state', room);
+  });
+
+  socket.on('host:kick_player', (data: { roomCode: string; deviceId: string }) => {
+    const room = kickPlayer(data.roomCode, data.deviceId);
     if (room) io.to(data.roomCode).emit('room:state', room);
   });
 

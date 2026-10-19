@@ -114,7 +114,8 @@ export default function FamilyFeudHost({ room, state }: Props) {
                 أسرع جرس: <span className="text-amber-400">{state.buzzerLockedByName}</span>!
               </h3>
               <p className="text-sm text-slate-400 mb-6" style={{ fontFamily: 'Cairo, sans-serif' }}>
-                {state.buzzerLockedByTeam === 'A' ? '🦅 فريق الصقور' : '🐺 فريق الذئاب'}
+                {state.buzzerLockedByTeam === 'A' ? '🦅 ' : '🐺 '}
+                {state.buzzerLockedByTeam ? room.teams[state.buzzerLockedByTeam]?.name : ''}
               </p>
 
               <div className="flex flex-wrap gap-3 justify-center">
@@ -123,14 +124,14 @@ export default function FamilyFeudHost({ room, state }: Props) {
                   className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-2xl transition-colors"
                   style={{ fontFamily: 'Cairo, sans-serif' }}
                 >
-                  تسليم السيطرة لـ الصقور 🦅
+                  تسليم السيطرة لـ {room.teams.A.name} 🦅
                 </button>
                 <button
                   onClick={() => handleAssignControl('B')}
                   className="px-6 py-3 bg-violet-600 hover:bg-violet-500 text-white font-black rounded-2xl transition-colors"
                   style={{ fontFamily: 'Cairo, sans-serif' }}
                 >
-                  تسليم السيطرة لـ الذئاب 🐺
+                  تسليم السيطرة لـ {room.teams.B.name} 🐺
                 </button>
                 <button
                   onClick={handleResetBuzzer}

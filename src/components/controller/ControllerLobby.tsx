@@ -77,7 +77,8 @@ export default function ControllerLobby({ room, player }: Props) {
               فريقك:
             </span>
             <span className="text-lg font-black" style={{ fontFamily: 'Cairo, sans-serif' }}>
-              {player.team === 'A' ? '🦅 فريق الصقور' : '🐺 فريق الذئاب'}
+              {player.team === 'A' ? '🦅 ' : '🐺 '}
+              {room.teams[player.team]?.name || (player.team === 'A' ? 'فريق الصقور' : 'فريق الذئاب')}
             </span>
           </div>
 
